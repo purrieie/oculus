@@ -1,167 +1,124 @@
-# OCULUS — Cyber Intelligence Platform
+# OCULUS
+### Cyber Intelligence Platform for Critical Infrastructure
 
-> Real-time critical infrastructure threat monitoring, MITRE ATT&CK analysis, and AI-powered threat intelligence — built for security analysts.
+> *"The world's attacks, mapped in real time."*
 
-![OCULUS](https://img.shields.io/badge/OCULUS-Cyber%20Intelligence-3b82f6?style=for-the-badge)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi)
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python)
-![Groq](https://img.shields.io/badge/Groq-LLaMA%203.1-F55036?style=for-the-badge)
+OCULUS is a full-stack threat intelligence platform built for security analysts who work in the highest-stakes environments on earth — power grids, airports, ports, water treatment facilities. It pulls live vulnerability data, maps threats to the MITRE ATT&CK framework using RAG-powered AI, and surfaces everything through four interconnected interfaces that feel less like enterprise software and more like opening an intelligence dossier.
+
+Built as an intern project at [Gramax Cybertech](https://gramaxcybertech.com) — a GMR Group subsidiary securing critical infrastructure across India and beyond.
 
 ---
 
-## What is OCULUS?
+## What it does
 
-OCULUS is a full-stack cyber threat intelligence platform purpose-built for critical infrastructure security. It aggregates live vulnerability and incident data, maps threats to the MITRE ATT&CK framework using RAG (Retrieval-Augmented Generation), and surfaces actionable intelligence through four interconnected interfaces — a 3D globe, a news feed, a threat analyzer, and an AI assistant.
+Most threat intelligence tools drown you in data. OCULUS is designed around a different philosophy: show analysts exactly what they need to see, connect the dots automatically, and get out of the way.
+
+**You open the globe.** Live incidents from CISA's Known Exploited Vulnerabilities feed appear as glowing, pulsing dots on a rotating 3D earth. Red for critical. Amber for high. Each dot is a real vulnerability being actively exploited somewhere in the world, right now. You click one, and a frosted glass panel slides in with the full context — sector, location, severity, description. Two buttons at the bottom: *Analyze this incident* and *Ask AI*.
+
+**You click Analyze.** The incident text travels to the MITRE ATT&CK Analyzer. Groq's LLaMA 3.1 first expands the brief CVE description into a full technical narrative, then runs it through a RAG pipeline against 709 MITRE techniques stored in ChromaDB. What comes back is a complete intelligence dossier — attack timeline reconstructed step by step, every relevant technique mapped with its T-ID, indicators of compromise, and a tiered mitigation strategy. The kind of report that would take an analyst hours, in about fifteen seconds.
+
+**Or you click Ask AI.** The incident context loads directly into the conversational assistant. You ask follow-up questions in plain English. The assistant answers using the same MITRE knowledge base, with inline source citations — `[T1133]` `[CISA AA25-014A]` — embedded right inside the response text.
+
+**Meanwhile, the news feed** is pulling live cybersecurity articles from NewsAPI, summarizing each one with Groq in real time, and presenting them as a horizontal editorial scroll. Every card has an Analyze button. Every card has an Ask AI button. The whole thing is connected.
 
 ---
 
 ## Architecture
 
-```mermaid
-graph TD
-    subgraph Frontend ["Frontend — Static HTML/JS"]
-        G[globe.html\nThreat Map]
-        U[updates.html\nNews Intel]
-        M[mittar.html\nMITRE Analyzer]
-        C[chatrag.html\nAI Assistant]
-    end
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Data Sources                          │
+│  CISA KEV Feed    NewsAPI    MITRE ATT&CK JSON    ChromaDB  │
+└──────────────┬──────────────────┬───────────────────────────┘
+               │                  │
+┌──────────────▼──────────────────▼───────────────────────────┐
+│                     Services Layer                           │
+│  otx_client.py   news_client.py   groq_client.py   rag.py  │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────┐
+│               FastAPI Backend  (main.py)                     │
+│                                                              │
+│  GET /api/incidents    GET /api/news                        │
+│  POST /api/analyze     POST /api/chat                       │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────┐
+│                    Frontend — 4 Pages                        │
+│                                                              │
+│  globe.html        updates.html                             │
+│  Threat Map        News Intel                               │
+│                                                              │
+│  mittar.html       chatrag.html                             │
+│  MITRE Analyzer    AI Assistant                             │
+└─────────────────────────────────────────────────────────────┘
+```
 
-    subgraph Backend ["Backend — FastAPI"]
-        API[main.py\nFastAPI App]
-        R1[routers/incidents.py]
-        R2[routers/news.py]
-        R3[routers/analyze.py]
-        R4[routers/chat.py]
-    end
+### Cross-page intelligence flow
 
-    subgraph Services ["Services Layer"]
-        OTX[otx_client.py\nCISA KEV Feed]
-        NEWS[news_client.py\nNewsAPI + Groq Summaries]
-        GROQ[groq_client.py\nLLaMA 3.1 via Groq]
-        RAG[rag.py\nChromaDB + Sentence Transformers]
-    end
+Every page connects to every other. Click an incident on the globe → incident text pre-fills the Analyzer → Analyzer output → one click loads the AI Assistant with full context. Click a news card → same flow. No copy-pasting, no tab-switching. The context travels with you.
 
-    subgraph Data ["Data Sources"]
-        CISA[(CISA KEV\nKnown Exploited Vulns)]
-        NEWSAPI[(NewsAPI\nCybersecurity News)]
-        MITRE[(MITRE ATT&CK\nenterprise-attack.json)]
-        CHROMA[(ChromaDB\nVector Store)]
-    end
-
-    G -->|GET /api/incidents| R1
-    U -->|GET /api/news| R2
-    M -->|POST /api/analyze| R3
-    C -->|POST /api/chat| R4
-
-    R1 --> API
-    R2 --> API
-    R3 --> API
-    R4 --> API
-
-    R1 --> OTX
-    R2 --> NEWS
-    R3 --> GROQ
-    R3 --> RAG
-    R4 --> GROQ
-    R4 --> RAG
-
-    OTX --> CISA
-    NEWS --> NEWSAPI
-    NEWS --> GROQ
-    GROQ --> MITRE
-    RAG --> MITRE
-    RAG --> CHROMA
+```
+Globe (live incident)
+    │
+    ├──► Analyzer ──► full MITRE dossier
+    │         │
+    └──► AI Assistant ◄─────────────────┘
+              ▲
+News Feed ────┘
 ```
 
 ---
 
-## Features
-
-### Threat Map (`globe.html`)
-- Full-screen interactive 3D globe powered by Globe.GL and Three.js
-- Live incident markers pulled from CISA Known Exploited Vulnerabilities feed
-- Color-coded threat levels: Critical (red), Medium (amber), Low (green)
-- Animated arcs connecting high-severity incidents
-- Click any incident to open a detail panel with direct links to Analyzer and AI Assistant
-- Sector filters: Aviation, Power Grid, OT/ICS, Maritime
-- Auto-rotating globe with smooth scroll-triggered entrance animation
-
-### News Intel (`updates.html`)
-- Live cybersecurity news cards from NewsAPI across ICS/SCADA/OT queries
-- Each article AI-summarized by LLaMA 3.1 via Groq in real time
-- Scrolling ticker with threat level badges
-- One-click redirect to Analyzer or AI Assistant with article context pre-loaded
-
-### MITRE ATT&CK Analyzer (`mittar.html`)
-- Paste any incident report, CVE description, or raw threat intel
-- Groq first expands brief inputs into full technical narratives
-- RAG pipeline retrieves relevant MITRE ATT&CK techniques via semantic similarity
-- LLaMA 3.1 generates a full intelligence dossier:
-  - Threat severity, confidence, sector, threat actor
-  - Step-by-step attack timeline
-  - MITRE technique mappings (T-IDs with tactic pills)
-  - Indicators of Compromise (IPs, domains, hashes, CVEs)
-  - Mitigation strategy cards
-- Auto-triggered when redirected from Globe or News Intel
-
-### AI Assistant (`chatrag.html`)
-- Conversational cybersecurity analyst powered by LLaMA 3.1
-- RAG-backed: every query retrieves relevant MITRE ATT&CK knowledge chunks from ChromaDB
-- Full conversation history maintained within session
-- Source attribution pills showing which KB entries informed the response
-- Auto-triggered with incident context when redirected from other pages
-
----
-
-## Tech Stack
+## Tech stack
 
 | Layer | Technology |
 |---|---|
-| Backend Framework | FastAPI + Uvicorn |
+| Backend | FastAPI + Uvicorn |
 | LLM | LLaMA 3.1 8B Instant via Groq API |
-| Vector Database | ChromaDB (persistent local) |
-| Embeddings | sentence-transformers/all-MiniLM-L6-v2 |
+| Vector DB | ChromaDB (local persistent) |
+| Embeddings | sentence-transformers / all-MiniLM-L6-v2 |
 | Knowledge Base | MITRE ATT&CK Enterprise (709 techniques) |
-| Threat Intel | CISA Known Exploited Vulnerabilities feed |
+| Threat Intel | CISA Known Exploited Vulnerabilities |
 | News | NewsAPI |
 | 3D Globe | Globe.GL + Three.js |
 | Animations | GSAP + ScrollTrigger |
-| Frontend | Vanilla HTML/CSS/JS |
+| Frontend | Vanilla HTML / CSS / JS |
 | Fonts | Alfa Slab One, Stardos Stencil, PT Serif Caption |
 
 ---
 
-## Project Structure
+## Project structure
 
 ```
 oculus/
-├── main.py                     # FastAPI app, CORS, router registration
-├── .env                        # API keys (not committed)
+├── main.py                      # FastAPI app, CORS, router registration
+├── .env                         # API keys — not committed
 ├── requirements.txt
 │
 ├── routers/
-│   ├── incidents.py            # GET /api/incidents — CISA KEV data
-│   ├── news.py                 # GET /api/news — NewsAPI + Groq summaries
-│   ├── analyze.py              # POST /api/analyze — MITRE ATT&CK dossier
-│   └── chat.py                 # POST /api/chat — RAG conversational AI
+│   ├── incidents.py             # GET /api/incidents
+│   ├── news.py                  # GET /api/news
+│   ├── analyze.py               # POST /api/analyze
+│   └── chat.py                  # POST /api/chat
 │
 ├── services/
-│   ├── otx_client.py           # CISA KEV fetcher, country coordinate mapping
-│   ├── news_client.py          # NewsAPI fetcher, Groq summarization
-│   ├── groq_client.py          # expand_incident + analyze_incident via LLaMA
-│   └── rag.py                  # ChromaDB ingestion, MITRE loading, retrieval
+│   ├── otx_client.py            # CISA KEV fetcher + coordinate mapping
+│   ├── news_client.py           # NewsAPI + Groq summarization
+│   ├── groq_client.py           # expand_incident + analyze_incident
+│   └── rag.py                   # ChromaDB ingestion + semantic retrieval
 │
 ├── data/
-│   └── mitre_attack.json       # MITRE ATT&CK Enterprise JSON (not committed)
+│   └── mitre_attack.json        # MITRE ATT&CK Enterprise — not committed
 │
-├── chroma_db/                  # Persistent ChromaDB vector store (not committed)
+├── chroma_db/                   # Persistent vector store — not committed
 │
 └── static/
-    ├── globe.html              # Threat Map
-    ├── updates.html            # News Intel
-    ├── mittar.html             # MITRE Analyzer
-    ├── chatrag.html            # AI Assistant
-    └── oculus-logo.svg         # Brand logo
+    ├── globe.html               # Threat Map
+    ├── updates.html             # News Intel
+    ├── mittar.html              # MITRE Analyzer
+    ├── chatrag.html             # AI Assistant
+    └── oculus-logo.svg
 ```
 
 ---
@@ -169,38 +126,41 @@ oculus/
 ## Setup
 
 ### Prerequisites
-- Python 3.10+
-- Node not required — all frontend is vanilla HTML
 
-### 1. Clone the repository
+- Python 3.10+
+- ~1.5GB disk space (sentence-transformers + MITRE dataset)
+- Three free API keys (details below)
+
+### 1. Clone
 
 ```bash
 git clone https://github.com/purrieie/oculus.git
 cd oculus
 ```
 
-### 2. Create virtual environment
+### 2. Virtual environment
 
 ```bash
 python -m venv venv
-source venv/bin/activate        # Mac/Linux
+source venv/bin/activate        # Mac / Linux
 venv\Scripts\activate           # Windows
 ```
 
 ### 3. Install dependencies
 
 ```bash
-pip install fastapi uvicorn python-dotenv groq chromadb sentence-transformers requests newsapi-python
+pip install fastapi uvicorn python-dotenv groq chromadb \
+            sentence-transformers requests newsapi-python
 ```
 
-Note: `sentence-transformers` pulls in PyTorch — expect a 2-3 minute install.
+> First install takes 3-5 minutes — sentence-transformers pulls PyTorch.
 
-### 4. Get API keys
+### 4. Get your API keys
 
-| Service | URL | Free Tier |
+| Service | URL | Free tier |
 |---|---|---|
-| Groq | console.groq.com | Yes |
-| NewsAPI | newsapi.org | Yes |
+| Groq | [console.groq.com](https://console.groq.com) | Yes — generous |
+| NewsAPI | [newsapi.org](https://newsapi.org) | Yes |
 | CISA KEV | No key required | Public |
 
 ### 5. Configure environment
@@ -215,18 +175,19 @@ NEWS_API_KEY=...
 ### 6. Download MITRE ATT&CK data
 
 ```bash
-curl -L "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json" -o data/mitre_attack.json
+curl -L "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json" \
+     -o data/mitre_attack.json
 ```
 
-This is ~50MB. The RAG pipeline will auto-ingest it into ChromaDB on first run.
+This is ~50MB. On first server start, OCULUS will automatically ingest all 709 techniques into ChromaDB — takes about 2 minutes, only happens once.
 
-### 7. Run the server
+### 7. Run
 
 ```bash
 uvicorn main:app --reload --port 8000
 ```
 
-### 8. Open in browser
+### 8. Open
 
 | Page | URL |
 |---|---|
@@ -238,10 +199,41 @@ uvicorn main:app --reload --port 8000
 
 ---
 
-## API Reference
+## Deploying to HuggingFace Spaces
+
+OCULUS runs on HuggingFace Spaces (Docker) for free. The 2GB RAM free tier handles the full stack.
+
+Add a `Dockerfile` to the repo root:
+
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+RUN mkdir -p data chroma_db
+
+RUN curl -L "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json" \
+    -o data/mitre_attack.json
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
+```
+
+Then on HuggingFace: New Space → Docker SDK → connect GitHub → add `GROQ_API_KEY` and `NEWS_API_KEY` as repository secrets → deploy.
+
+> Note: ChromaDB is not persistent on the free tier. MITRE re-ingests on every cold start (~2 min). Paid tier adds persistent storage.
+
+---
+
+## API reference
 
 ### `GET /api/incidents`
-Returns live incidents from CISA KEV with coordinates and threat classification.
+
+Returns live incidents from CISA KEV with coordinates and severity classification.
 
 ```json
 [
@@ -259,13 +251,14 @@ Returns live incidents from CISA KEV with coordinates and threat classification.
 ```
 
 ### `GET /api/news`
-Returns recent cybersecurity news with Groq-generated summaries.
+
+Returns recent cybersecurity news with Groq-generated summaries and sector classification.
 
 ```json
 [
   {
     "headline": "...",
-    "summary": "...",
+    "summary": "One-line Groq summary",
     "sector": "ICS/SCADA",
     "threat_level": "medium",
     "source": "Wired",
@@ -276,92 +269,80 @@ Returns recent cybersecurity news with Groq-generated summaries.
 ```
 
 ### `POST /api/analyze`
-Accepts incident text, returns full MITRE ATT&CK intelligence dossier.
 
-**Request:**
-```json
-{ "incident_text": "Attackers gained access to a water treatment plant SCADA system..." }
-```
+Accepts any incident text. Expands it, retrieves MITRE context, returns full intelligence dossier.
 
-**Response:**
 ```json
+// Request
+{ "incident_text": "Attackers gained access to a water treatment SCADA system..." }
+
+// Response
 {
   "title": "Water Treatment Plant SCADA Compromise",
   "severity": "critical",
   "confidence": "high",
   "sector": "Water and Wastewater",
   "threat_actor": "Unknown",
-  "timeline": [...],
-  "techniques": [{"tactic": "Initial Access", "id": "T1190", "name": "Exploit Public-Facing Application"}],
-  "iocs": [...],
-  "mitigations": [...]
+  "executive_summary": "...",
+  "timeline": [
+    { "step": 1, "title": "Initial Access", "text": "...", "level": "initial" }
+  ],
+  "techniques": [
+    { "tactic": "Initial Access", "id": "T1190", "name": "Exploit Public-Facing Application" }
+  ],
+  "iocs": [
+    { "type": "cve", "value": "CVE-2025-1234", "confidence": "high" }
+  ],
+  "mitigations": [
+    { "phase": "Immediate Actions", "items": ["Patch CVE-2025-1234...", "Rotate credentials..."] }
+  ]
 }
 ```
 
 ### `POST /api/chat`
-RAG-backed conversational endpoint.
 
-**Request:**
+RAG-backed conversational endpoint. Maintains context across turns.
+
 ```json
+// Request
 {
-  "message": "What MITRE techniques are used in VPN credential attacks on OT systems?",
+  "message": "What MITRE techniques are used in VPN attacks on OT systems?",
   "history": []
 }
-```
 
-**Response:**
-```json
+// Response
 {
   "response": "...",
-  "sources": [{"type": "db", "ref": "Valid Accounts"}]
+  "sources": [{ "type": "db", "ref": "Valid Accounts" }]
 }
 ```
 
 ---
 
-## How the RAG Pipeline Works
+## How the RAG pipeline works
 
-1. On first run, `rag.py` loads all 709 MITRE ATT&CK techniques from `mitre_attack.json`
-2. Each technique is embedded using `all-MiniLM-L6-v2` and stored in ChromaDB
-3. On every `/api/analyze` or `/api/chat` request, the query is embedded and the top-5 semantically similar techniques are retrieved
-4. Retrieved context is injected into the LLaMA 3.1 prompt as grounding knowledge
-5. For `/api/analyze`, an additional `expand_incident` step first enriches brief inputs before analysis
+On first run, `rag.py` reads all 709 MITRE ATT&CK Enterprise techniques from `mitre_attack.json`. Each technique name, description, and tactic is embedded using `sentence-transformers/all-MiniLM-L6-v2` and stored as a vector in ChromaDB. This only happens once — subsequent runs load from the persisted store in `./chroma_db`.
+
+On every `/api/analyze` request, the incident text is first passed through `expand_incident()` — a Groq call that enriches brief CVE descriptions into full technical narratives before analysis. Then the expanded text is embedded, the top-5 semantically similar MITRE techniques are retrieved, and those chunks are injected into the analysis prompt as grounding context. The LLM is generating structure, not guessing technique IDs.
+
+On every `/api/chat` request, the user's message is embedded and the top-5 relevant KB chunks are retrieved and prepended to the conversation context. The assistant answers from real documents, not training data.
 
 ---
 
-## Cross-Page Intelligence Flow
+## Design
 
-```mermaid
-sequenceDiagram
-    participant Globe as Threat Map
-    participant News as News Intel
-    participant Analyzer as MITRE Analyzer
-    participant Assistant as AI Assistant
-    participant API as FastAPI Backend
+Four pages, four moods, one visual language.
 
-    Globe->>API: GET /api/incidents
-    API-->>Globe: CISA KEV incidents with coordinates
-    Globe->>Analyzer: Click "Analyze Further" → ?q=incident_data
-    Globe->>Assistant: Click "Ask AI" → ?q=incident_data
+The globe is cinematic — dark satellite tiles, glowing incident markers, atmospheric depth. The news feed is editorial — soft blue-gray, horizontal scroll, serif headlines, magazine archive energy. The analyzer is the intelligence dossier — structured, precise, data-dense but never cluttered. The assistant is intimate — deep navy, floating bubbles, an ops room at 2am.
 
-    News->>API: GET /api/news
-    API-->>News: Articles with Groq summaries
-    News->>Analyzer: Click "Analyze" → ?q=headline+summary
-    News->>Assistant: Click "Ask AI" → ?q=headline+summary
-
-    Analyzer->>API: POST /api/analyze {incident_text}
-    API-->>Analyzer: Full MITRE dossier JSON
-
-    Assistant->>API: POST /api/chat {message, history}
-    API-->>Assistant: RAG response + source attribution
-```
+Everything shares the same foundation: `#030712` void backgrounds, glassmorphism panels at `rgba(10,22,40,0.65)`, `#3b82f6` blue accents, Three.js star fields, and Quantico monospace labels. The design system was built to feel like Apple × Linear × Palantir — not Splunk.
 
 ---
 
 ## License
 
-MIT
+MIT — do whatever you want with it.
 
 ---
 
-Built by [@purrieie](https://github.com/purrieie)
+*Built with way too much attention to detail and a genuine belief that security tooling doesn't have to be ugly.*
