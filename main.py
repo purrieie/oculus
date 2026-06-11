@@ -4,6 +4,23 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from routers import incidents, news, analyze, chat
+import os
+import requests as req
+
+def download_mitre():
+    path = "data/mitre_attack.json"
+    if not os.path.exists(path):
+        print("Downloading MITRE ATT&CK...")
+        os.makedirs("data", exist_ok=True)
+        r = req.get(
+            "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json",
+            timeout=120
+        )
+        with open(path, "wb") as f:
+            f.write(r.content)
+        print("MITRE downloaded.")
+
+download_mitre()
 
 app = FastAPI(title="OCULUS API")
 
