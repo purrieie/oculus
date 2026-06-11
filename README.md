@@ -5,8 +5,6 @@
 
 OCULUS is a full-stack threat intelligence platform built for security analysts who work in the highest-stakes environments on earth — power grids, airports, ports, water treatment facilities. It pulls live vulnerability data, maps threats to the MITRE ATT&CK framework using RAG-powered AI, and surfaces everything through four interconnected interfaces that feel less like enterprise software and more like opening an intelligence dossier.
 
-Built as an intern project at [Gramax Cybertech](https://gramaxcybertech.com) — a GMR Group subsidiary securing critical infrastructure across India and beyond.
-
 ---
 
 ## What it does
