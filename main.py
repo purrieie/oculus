@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import incidents, news, analyze, chat
 import os
 import requests as req
+from fastapi.responses import FileResponse
+
 
 def download_mitre():
     path = "data/mitre_attack.json"
@@ -38,9 +40,10 @@ app.include_router(news.router, prefix="/api")
 app.include_router(analyze.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")
 
+
 @app.get("/")
-def root():
-    return {"status": "OCULUS online"}
+async def home():
+    return FileResponse("static/globe.html")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 7860))
