@@ -67,34 +67,29 @@ A RAG-powered cybersecurity assistant.
 
 ## 🏗️ System Architecture
 
-```mermaid
 flowchart TD
 
-    A[Frontend UI] --> B[FastAPI Backend]
+    UI["Frontend UI"] --> API["FastAPI Backend"]
 
-    B --> C[/api/incidents]
-    B --> D[/api/news]
-    B --> E[/api/analyze]
-    B --> F[/api/chat]
+    API --> INC["GET api/incidents"]
+    API --> NEWS["GET api/news"]
+    API --> ANALYZE["POST api/analyze"]
+    API --> CHAT["POST api/chat"]
 
-    C --> G[CISA KEV Feed]
-    C --> H[CISA ICS Advisories]
+    INC --> CISA1["CISA KEV Feed"]
+    INC --> CISA2["CISA ICS Advisories"]
 
-    D --> I[NewsAPI]
-    D --> J[Groq AI Summaries]
+    NEWS --> NEWSAPI["NewsAPI"]
+    NEWS --> SUMM["Groq Summaries"]
 
-    E --> K[MITRE ATT&CK Dataset]
-    E --> L[Groq Incident Analysis]
+    ANALYZE --> MITRE["MITRE ATT&CK Dataset"]
+    ANALYZE --> G1["Groq Analysis"]
 
-    F --> M[ChromaDB]
-    M --> N[MITRE Knowledge Base]
+    CHAT --> CHROMA["ChromaDB"]
+    CHROMA --> KB["MITRE Knowledge Base"]
 
-    F --> O[Sentence Transformers]
-    F --> P[Groq LLM]
-
-    P --> B
-```
-
+    CHAT --> EMB["Sentence Transformers"]
+    CHAT --> G2["Groq LLM"]
 ---
 
 ## 🧠 Technology Stack
