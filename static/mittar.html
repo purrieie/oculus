@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'%3E%3Crect width='32' height='32' rx='4' fill='%23051424'/%3E%3Cpath d='M16 6C13 11 11 16 11 16C11 16 13 21 16 26C19 21 21 16 21 16C21 16 19 11 16 6Z' stroke='%233b82f6' stroke-width='2' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%233b82f6'/%3E%3C/svg%3E">
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Stardos+Stencil:wght@400;700&family=PT+Serif+Caption&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --void:#030712;--deep:#060d1f;--navy:#0a1628;
+  --accent:#3b82f6;--accent-bright:#60a5fa;
+  --text-primary:#f0f6ff;--text-secondary:#8ba3c7;--text-muted:#3d5a80;
+  --green:#10b981;--yellow:#f59e0b;--red:#ef4444;
+  --glass:rgba(10,22,40,0.65);--border:rgba(59,130,246,0.16);
+  --font-display:'Stardos Stencil',monospace;--font-body:'PT Serif Caption',serif;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--void);color:var(--text-primary);font-family:var(--font-body);overflow-x:hidden;min-height:100vh;}
+
+/* BG */
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
+#bg canvas{width:100%;height:100%;}
+.vignette{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,rgba(3,7,18,.8) 100%);}
+
+/* NAV */
+nav{position:relative;z-index:100;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;background:rgba(3,7,18,.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);}
+.nav-brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:.06em;}
+.nav-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 2.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.nav-links{display:flex;gap:32px;font-family:var(--font-display);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);}
+.nav-links a{color:inherit;text-decoration:none;transition:color .2s;}
+.nav-links a.active{color:var(--accent-bright);}
+.nav-links a:hover{color:var(--text-secondary);}
+
+/* MAIN */
+main{position:relative;z-index:10;}
+
+/* HERO INPUT */
+.hero-input-section{min-height:calc(100vh - 60px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 48px;text-align:center;}
+.hero-eyebrow{font-family:var(--font-display);font-size:12px;letter-spacing:.35em;text-transform:uppercase;color:var(--accent-bright);margin-bottom:28px;opacity:.8;}
+.hero-title{font-family:var(--font-display);font-size:clamp(28px,4vw,52px);font-weight:700;letter-spacing:.04em;line-height:1.1;margin-bottom:20px;color:var(--text-primary);}
+.hero-sub{font-size:15px;color:var(--text-secondary);max-width:540px;line-height:1.7;margin-bottom:56px;}
+.input-shell{width:100%;max-width:720px;background:var(--glass);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(20px);padding:4px;transition:border-color .3s,box-shadow .3s;}
+.input-shell:focus-within{border-color:rgba(59,130,246,.45);box-shadow:0 0 40px rgba(59,130,246,.1);}
+.input-shell textarea{width:100%;background:transparent;border:none;outline:none;color:var(--text-primary);font-family:var(--font-display);font-size:14px;line-height:1.8;padding:24px 28px;resize:none;min-height:160px;caret-color:var(--accent-bright);}
+.input-shell textarea::placeholder{color:var(--text-muted);}
+.input-footer{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:12px 20px 16px;border-top:1px solid rgba(59,130,246,.08);}
+.input-hint{font-family:var(--font-display);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);text-align:left;line-height:1.5;}
+.btn-analyze{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:14px 32px;font-family:var(--font-display);font-size:12px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .25s;white-space:nowrap;flex-shrink:0;}
+.btn-analyze:hover{background:var(--accent-bright);transform:translateY(-1px);box-shadow:0 8px 24px rgba(59,130,246,.3);}
+.btn-analyze:active{transform:translateY(0);}
+
+/* SECTIONS */
+.output{display:none;padding:0 48px 120px;}
+.output.visible{display:block;}
+.section{margin-bottom:100px;opacity:0;transform:translateY(32px);transition:opacity .8s ease,transform .8s ease;}
+.section.revealed{opacity:1;transform:none;}
+.section-eyebrow{font-family:var(--font-display);font-size:11px;letter-spacing:.35em;text-transform:uppercase;color:var(--accent-bright);margin-bottom:12px;opacity:.7;}
+.section-title{font-family:var(--font-display);font-size:clamp(22px,3vw,36px);font-weight:700;letter-spacing:-.01em;margin-bottom:40px;color:var(--text-primary);}
+.divider{height:1px;background:linear-gradient(to right,var(--accent),transparent);margin-bottom:40px;opacity:.3;}
+
+/* THREAT OVERVIEW */
+.overview-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1px;background:var(--border);border-radius:12px;overflow:hidden;margin-bottom:28px;}
+.overview-cell{background:var(--glass);backdrop-filter:blur(16px);padding:28px 24px;}
+.overview-cell .label{font-family:var(--font-display);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;}
+.overview-cell .value{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text-primary);}
+.overview-cell .value.red{color:var(--red);}
+.overview-cell .value.green{color:var(--green);}
+.overview-cell .value.blue{color:var(--accent-bright);}
+.overview-summary{background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:32px;backdrop-filter:blur(16px);}
+.overview-summary .sum-title{font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:14px;}
+.overview-summary p{font-size:17px;font-weight:300;color:var(--text-secondary);line-height:1.8;}
+
+/* TIMELINE */
+.timeline{display:flex;flex-direction:column;gap:0;max-width:900px;position:relative;}
+.timeline::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,transparent,rgba(59,130,246,.4) 10%,rgba(59,130,246,.4) 90%,transparent);transform:translateX(-50%);}
+.tl-item{display:flex;gap:0;padding-bottom:48px;opacity:0;transform:translateY(24px);transition:all .7s cubic-bezier(0.16,1,0.3,1);position:relative;align-items:flex-start;}
+.tl-item.revealed{opacity:1;transform:translateY(0);}
+.tl-item:nth-child(odd){flex-direction:row;}
+.tl-item:nth-child(even){flex-direction:row-reverse;}
+.tl-spine{position:absolute;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;z-index:2;}
+.tl-marker{width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--void);box-shadow:0 0 0 3px rgba(59,130,246,.3);margin-top:18px;}
+.tl-line{display:none;}
+.tl-content{width:calc(50% - 40px);background:var(--glass);border:1px solid var(--border);border-radius:10px;padding:20px 24px;backdrop-filter:blur(12px);}
+.tl-item:nth-child(odd) .tl-content{margin-right:auto;}
+.tl-item:nth-child(even) .tl-content{margin-left:auto;}
+.tl-step{font-family:var(--font-display);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;}
+.tl-text{font-size:14px;color:var(--text-secondary);line-height:1.6;}
+.tl-title{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px;}
+/* MITRE */
+.tactic-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;}
+.tactic-pill{font-family:var(--font-display);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:10px 18px;border-radius:24px;border:1px solid var(--border);background:rgba(10,22,40,.5);color:var(--text-muted);cursor:pointer;transition:all .2s;backdrop-filter:blur(8px);}
+.tactic-pill:hover{border-color:var(--accent);color:var(--accent-bright);}
+.tactic-pill.active{background:rgba(59,130,246,.15);border-color:var(--accent);color:var(--accent-bright);box-shadow:0 0 16px rgba(59,130,246,.15);}
+.techniques-panel{background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:28px;backdrop-filter:blur(16px);display:none;}
+.techniques-panel.visible{display:block;}
+.tech-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px;}
+.tech-card{background:rgba(3,7,18,.6);border:1px solid rgba(59,130,246,.1);border-radius:8px;padding:14px 16px;}
+.tech-id{font-family:var(--font-display);font-size:13px;color:var(--accent);margin-bottom:4px;letter-spacing:.06em;}
+.tech-name{font-size:14px;color:var(--text-secondary);font-weight:300;}
+
+/* IOC */
+.ioc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.ioc-group{background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:24px;backdrop-filter:blur(12px);}
+.ioc-group-title{font-family:var(--font-display);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;}
+.ioc-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(59,130,246,.06);}
+.ioc-item:last-child{border-bottom:none;}
+.ioc-tag{font-family:var(--font-display);font-size:11px;letter-spacing:.08em;padding:4px 10px;border-radius:4px;flex-shrink:0;font-weight:700;}
+.ioc-tag.ip{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2);}
+.ioc-tag.domain{background:rgba(59,130,246,.1);color:var(--accent-bright);border:1px solid rgba(59,130,246,.2);}
+.ioc-tag.hash{background:rgba(245,158,11,.1);color:var(--yellow);border:1px solid rgba(245,158,11,.2);}
+.ioc-tag.cve{background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.2);}
+.ioc-val{font-family:var(--font-display);font-size:13px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;letter-spacing:.04em;}
+.ioc-conf{font-family:var(--font-display);font-size:11px;letter-spacing:.1em;}
+
+/* GRAPH */
+.graph-shell{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:24px;backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center;}
+.graph-shell svg{width:100%;max-width:100%;}
+
+/* MITIGATIONS */
+.mit-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.mit-card{background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:28px;backdrop-filter:blur(12px);opacity:0;transform:translateY(24px);transition:all .7s cubic-bezier(0.16, 1, 0.3, 1);}
+.mit-card.revealed{opacity:1;transform:translateY(0);}
+.mit-card-header{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.mit-icon{display:none;}
+.mit-card-title{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-primary);}
+.mit-list{display:flex;flex-direction:column;gap:10px;}
+.mit-item{display:flex;gap:12px;font-size:15px;font-weight:300;color:var(--text-secondary);line-height:1.6;}
+.mit-num{font-family:var(--font-display);font-size:12px;color:var(--accent);flex-shrink:0;margin-top:2px;}
+
+/* LOADING STATE */
+.analyzing{display:none;flex-direction:column;align-items:center;gap:24px;padding:80px 0;}
+.analyzing.visible{display:flex;}
+.scan-ring{width:64px;height:64px;border-radius:50%;border:1px solid rgba(59,130,246,.2);border-top-color:var(--accent);animation:spin 1.2s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.scan-text{font-family:var(--font-display);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--text-muted);}
+</style>
+</head>
+<body>
+
+<div id="bg"><canvas id="bg-canvas"></canvas></div>
+<div class="vignette"></div>
+
+<nav>
+  <div class="nav-brand">
+  <img src="/static/oculus-logo.svg" alt="OCULUS logo - cybersecurity threat intelligence platform header" style="height:44px;width:auto;">
+</div>
+<div class="nav-links">
+    <a href="/static/globe.html">Threat Map</a>
+    <a href="/static/updates.html">News Intel</a>
+    <a href="/static/mittar.html" class="active">Analyzer</a>
+    <a href="/static/chatrag.html">Assistant</a>
+  </div>
+</nav>
+
+<main>
+  <section class="hero-input-section" id="input-section">
+    <div class="hero-eyebrow">MITRE ATT&CK Intelligence Engine</div>
+    <h1 class="hero-title">Analyze Any Threat</h1>
+    <p class="hero-sub">Paste an incident report, threat intelligence, or describe suspicious activity. The engine maps it to MITRE ATT&CK, extracts IOCs, and generates a full intelligence dossier.</p>
+    <div class="input-shell">
+      <textarea id="incident-input" placeholder="Describe an incident, paste threat intelligence, upload indicators, or explain suspicious activity...&#10;&#10;Example: &quot;APT group compromised a Frankfurt power station via unpatched Siemens SCADA VPN. Lateral movement detected across three OT segments before isolation...&quot;" rows="6"></textarea>
+      <div class="input-footer">
+        <span class="input-hint">Supports: incident reports · advisories · threat intel · IOCs · raw logs</span>
+        <button class="btn-analyze" id="analyze-btn">[ Analyze Threat ]</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="analyzing" id="analyzing-state">
+    <div class="scan-ring"></div>
+    <div class="scan-text">Mapping to MITRE ATT&CK framework...</div>
+  </div>
+
+  <section class="output" id="output-section">
+    <div style="max-width:960px;margin:0 auto;">
+
+      <div class="section" id="s1">
+        <div class="section-eyebrow">Intelligence Dossier · Section 01</div>
+        <div class="section-title">Threat Overview</div>
+        <div class="divider"></div>
+        <div class="overview-grid">
+          <div class="overview-cell">
+            <div class="label">Threat Severity</div>
+            <div class="value red">Critical</div>
+          </div>
+          <div class="overview-cell">
+            <div class="label">Confidence Score</div>
+            <div class="value green">94%</div>
+          </div>
+          <div class="overview-cell">
+            <div class="label">Sector</div>
+            <div class="value blue">Power Grid</div>
+          </div>
+          <div class="overview-cell">
+            <div class="label">Threat Actor</div>
+            <div class="value">APT — Unknown</div>
+          </div>
+        </div>
+        <div class="overview-summary">
+          <div class="sum-title">SCADA Intrusion at Frankfurt Power Distribution Grid</div>
+          <p>A sophisticated nation-state aligned threat actor exploited an unpatched vulnerability in Siemens SIMATIC SCADA VPN infrastructure to achieve initial access into Frankfurt's power distribution network. Following a 90-day dormancy period, the actor conducted systematic discovery operations before executing lateral movement across three operational technology segments. Containment was achieved before physical process manipulation occurred.</p>
+        </div>
+      </div>
+
+      <div class="section" id="s2">
+        <div class="section-eyebrow">Intelligence Dossier · Section 02</div>
+        <div class="section-title">Attack Timeline</div>
+        <div class="divider"></div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-spine"><div class="tl-marker high"></div><div class="tl-line"></div></div>
+            <div class="tl-content">
+              <div class="tl-step">Step 01 · Initial Access</div>
+              <div class="tl-title">VPN Exploitation via CVE-2025-1234</div>
+              <div class="tl-text">APT exploited critical unpatched vulnerability in Siemens SIMATIC S7 VPN gateway. Remote code execution achieved without authentication. Estimated breach date 90 days prior to detection.</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-spine"><div class="tl-marker med"></div><div class="tl-line"></div></div>
+            <div class="tl-content">
+              <div class="tl-step">Step 02 · Discovery</div>
+              <div class="tl-title">Network Topology Enumeration</div>
+              <div class="tl-text">Attacker leveraged native admin tooling to silently enumerate IT/OT network topology, mapping engineering workstations and SCADA controller addresses while evading SIEM detection rules.</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-spine"><div class="tl-marker high"></div><div class="tl-line"></div></div>
+            <div class="tl-content">
+              <div class="tl-step">Step 03 · Lateral Movement</div>
+              <div class="tl-title">IT-to-OT Boundary Pivot</div>
+              <div class="tl-text">Used stolen credentials from a poorly segmented engineering workstation to pivot directly from corporate IT into the OT network segment, bypassing intended air-gap controls.</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-spine"><div class="tl-marker high"></div><div class="tl-line"></div></div>
+            <div class="tl-content">
+              <div class="tl-step">Step 04 · Execution</div>
+              <div class="tl-title">ICS Payload Deployment</div>
+              <div class="tl-text">Novel ICS-targeting malware deployed across three SCADA controllers. Payload attempted manipulation of power distribution logic registers. Real-world disruption narrowly avoided.</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-spine"><div class="tl-marker done"></div><div class="tl-line"></div></div>
+            <div class="tl-content">
+              <div class="tl-step">Step 05 · Containment</div>
+              <div class="tl-title">Anomaly Detection & Isolation</div>
+              <div class="tl-text">SOC flagged anomalous OT traffic patterns. Affected segments isolated within 4 hours. Actor evicted before achieving persistent foothold or triggering physical process changes.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" id="s3">
+        <div class="section-eyebrow">Intelligence Dossier · Section 03</div>
+        <div class="section-title">MITRE ATT&CK Mapping</div>
+        <div class="divider"></div>
+        <div class="tactic-pills">
+          <div class="tactic-pill active" data-tactic="initial">Initial Access</div>
+          <div class="tactic-pill" data-tactic="execution">Execution</div>
+          <div class="tactic-pill" data-tactic="persistence">Persistence</div>
+          <div class="tactic-pill" data-tactic="privilege">Privilege Escalation</div>
+          <div class="tactic-pill" data-tactic="defense">Defense Evasion</div>
+          <div class="tactic-pill" data-tactic="discovery">Discovery</div>
+          <div class="tactic-pill" data-tactic="lateral">Lateral Movement</div>
+          <div class="tactic-pill" data-tactic="c2">Command & Control</div>
+        </div>
+        <div class="techniques-panel visible" id="techniques-panel">
+          <div style="font-family:var(--font-display);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">Mapped Techniques</div>
+          <div class="tech-grid" id="tech-grid"></div>
+        </div>
+      </div>
+
+      <div class="section" id="s4">
+        <div class="section-eyebrow">Intelligence Dossier · Section 04</div>
+        <div class="section-title">Indicators of Compromise</div>
+        <div class="divider"></div>
+        <div class="ioc-grid">
+          <div class="ioc-group">
+            <div class="ioc-group-title">Network Indicators</div>
+            <div class="ioc-item"><span class="ioc-tag ip">IP</span><span class="ioc-val">185.220.101.47</span><span class="ioc-conf" style="color:var(--red);">High</span></div>
+            <div class="ioc-item"><span class="ioc-tag ip">IP</span><span class="ioc-val">94.102.49.190</span><span class="ioc-conf" style="color:var(--yellow);">Med</span></div>
+            <div class="ioc-item"><span class="ioc-tag domain">Domain</span><span class="ioc-val">update-srv.io</span><span class="ioc-conf" style="color:var(--red);">High</span></div>
+            <div class="ioc-item"><span class="ioc-tag domain">Domain</span><span class="ioc-val">cdn-assets.net</span><span class="ioc-conf" style="color:var(--yellow);">Med</span></div>
+          </div>
+          <div class="ioc-group">
+            <div class="ioc-group-title">File & Vulnerability Indicators</div>
+            <div class="ioc-item"><span class="ioc-tag hash">Hash</span><span class="ioc-val">a3f1c9d82b4e7f...</span><span class="ioc-conf" style="color:var(--red);">High</span></div>
+            <div class="ioc-item"><span class="ioc-tag hash">Hash</span><span class="ioc-val">7d2e4a91c5f8b3...</span><span class="ioc-conf" style="color:var(--yellow);">Med</span></div>
+            <div class="ioc-item"><span class="ioc-tag cve">CVE</span><span class="ioc-val">CVE-2025-1234</span><span class="ioc-conf" style="color:var(--red);">High</span></div>
+            <div class="ioc-item"><span class="ioc-tag cve">CVE</span><span class="ioc-val">CVE-2024-9871</span><span class="ioc-conf" style="color:var(--yellow);">Med</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" id="s5">
+        <div class="section-eyebrow">Intelligence Dossier · Section 05</div>
+        <div class="section-title">Threat Relationship Graph</div>
+        <div class="divider"></div>
+        <div class="graph-shell">
+          <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                <path d="M2 1L8 5L2 9" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round"/>
+              </marker>
+            </defs>
+            <line x1="140" y1="150" x2="228" y2="104" stroke="#3b82f6" stroke-width="0.8" stroke-opacity=".35" marker-end="url(#arr)"/>
+            <line x1="140" y1="150" x2="228" y2="196" stroke="#3b82f6" stroke-width="0.8" stroke-opacity=".35" marker-end="url(#arr)"/>
+            <line x1="262" y1="104" x2="358" y2="80" stroke="#3b82f6" stroke-width="0.8" stroke-opacity=".3" marker-end="url(#arr)"/>
+            <line x1="262" y1="104" x2="358" y2="128" stroke="#3b82f6" stroke-width="0.8" stroke-opacity=".3" marker-end="url(#arr)"/>
+            <line x1="262" y1="196" x2="358" y2="196" stroke="#ef4444" stroke-width="0.8" stroke-opacity=".4" marker-end="url(#arr)"/>
+            <line x1="262" y1="196" x2="358" y2="240" stroke="#3b82f6" stroke-width="0.8" stroke-opacity=".3" marker-end="url(#arr)"/>
+            <line x1="392" y1="80" x2="490" y2="150" stroke="#ef4444" stroke-width="0.8" stroke-opacity=".4" marker-end="url(#arr)"/>
+            <line x1="392" y1="128" x2="490" y2="150" stroke="#3b82f6" stroke-width="0.8" stroke-opacity=".3" marker-end="url(#arr)"/>
+            <line x1="392" y1="196" x2="490" y2="150" stroke="#ef4444" stroke-width="0.8" stroke-opacity=".4" marker-end="url(#arr)"/>
+
+            <circle cx="140" cy="150" r="28" fill="rgba(59,130,246,.1)" stroke="#3b82f6" stroke-width="1"/>
+            <text x="140" y="146" text-anchor="middle" font-family="Quantico,sans-serif" font-size="8" fill="#60a5fa" letter-spacing=".1em">APT</text>
+            <text x="140" y="158" text-anchor="middle" font-family="Quantico,sans-serif" font-size="8" fill="#60a5fa" letter-spacing=".1em">ACTOR</text>
+
+            <rect x="228" y="82" width="34" height="44" rx="5" fill="rgba(239,68,68,.08)" stroke="rgba(239,68,68,.35)" stroke-width="1"/>
+            <text x="245" y="99" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#f87171" letter-spacing=".05em">VPN</text>
+            <text x="245" y="111" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#f87171" letter-spacing=".05em">CVE</text>
+            <text x="245" y="121" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#f87171" letter-spacing=".05em">T1190</text>
+
+            <rect x="228" y="174" width="34" height="44" rx="5" fill="rgba(59,130,246,.08)" stroke="rgba(59,130,246,.3)" stroke-width="1"/>
+            <text x="245" y="191" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#60a5fa" letter-spacing=".05em">CRED</text>
+            <text x="245" y="203" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#60a5fa" letter-spacing=".05em">THEFT</text>
+            <text x="245" y="213" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#60a5fa" letter-spacing=".05em">T1078</text>
+
+            <rect x="358" y="60" width="34" height="40" rx="5" fill="rgba(59,130,246,.08)" stroke="rgba(59,130,246,.25)" stroke-width="1"/>
+            <text x="375" y="75" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#8ba3c7" letter-spacing=".05em">IT NET</text>
+            <text x="375" y="87" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#8ba3c7" letter-spacing=".05em">ENUM</text>
+            <text x="375" y="97" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#8ba3c7" letter-spacing=".05em">T1046</text>
+
+            <rect x="358" y="108" width="34" height="40" rx="5" fill="rgba(59,130,246,.08)" stroke="rgba(59,130,246,.25)" stroke-width="1"/>
+            <text x="375" y="123" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#8ba3c7" letter-spacing=".05em">OT</text>
+            <text x="375" y="135" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#8ba3c7" letter-spacing=".05em">PIVOT</text>
+            <text x="375" y="145" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#8ba3c7" letter-spacing=".05em">T1021</text>
+
+            <rect x="358" y="176" width="34" height="40" rx="5" fill="rgba(239,68,68,.1)" stroke="rgba(239,68,68,.35)" stroke-width="1"/>
+            <text x="375" y="191" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#f87171" letter-spacing=".05em">SCADA</text>
+            <text x="375" y="203" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#f87171" letter-spacing=".05em">PAYLOAD</text>
+            <text x="375" y="213" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#f87171" letter-spacing=".05em">T0831</text>
+
+            <rect x="358" y="220" width="34" height="40" rx="5" fill="rgba(59,130,246,.06)" stroke="rgba(59,130,246,.2)" stroke-width="1"/>
+            <text x="375" y="235" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#3d5a80" letter-spacing=".05em">C2</text>
+            <text x="375" y="247" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#3d5a80" letter-spacing=".05em">BEACON</text>
+            <text x="375" y="257" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#3d5a80" letter-spacing=".05em">T1071</text>
+
+            <circle cx="510" cy="150" r="30" fill="rgba(239,68,68,.1)" stroke="rgba(239,68,68,.4)" stroke-width="1.5"/>
+            <text x="510" y="146" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#f87171" letter-spacing=".1em">POWER</text>
+            <text x="510" y="158" text-anchor="middle" font-family="Quantico,sans-serif" font-size="7" fill="#f87171" letter-spacing=".1em">GRID</text>
+
+            <text x="140" y="192" text-anchor="middle" font-family="Quantico,sans-serif" font-size="8" fill="#3d5a80" letter-spacing=".08em">Threat Actor</text>
+            <text x="510" y="194" text-anchor="middle" font-family="Quantico,sans-serif" font-size="8" fill="#3d5a80" letter-spacing=".08em">Target</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="section" id="s6">
+        <div class="section-eyebrow">Intelligence Dossier · Section 06</div>
+        <div class="section-title">Mitigation Strategy</div>
+        <div class="divider"></div>
+        <div class="mit-grid">
+          <div class="mit-card">
+            <div class="mit-card-header">
+              <div class="mit-icon red"><svg viewBox="0 0 24 24" stroke="#ef4444"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+              <div class="mit-card-title">Immediate Actions</div>
+            </div>
+            <div class="mit-list">
+              <div class="mit-item"><span class="mit-num">01</span>Patch CVE-2025-1234 in all Siemens SIMATIC S7 VPN gateways immediately. Block exploitation vector at perimeter.</div>
+              <div class="mit-item"><span class="mit-num">02</span>Revoke and rotate all engineering workstation credentials. Force MFA on OT-adjacent accounts within 24 hours.</div>
+            </div>
+          </div>
+          <div class="mit-card">
+            <div class="mit-card-header">
+              <div class="mit-icon amber"><svg viewBox="0 0 24 24" stroke="#f59e0b"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
+              <div class="mit-card-title">Containment</div>
+            </div>
+            <div class="mit-list">
+              <div class="mit-item"><span class="mit-num">01</span>Deploy emergency network segmentation rules isolating SCADA segment from corporate IT. Verify data diode integrity.</div>
+              <div class="mit-item"><span class="mit-num">02</span>Block IOC IPs and domains at all perimeter firewalls. Activate threat hunting against TTPs in this dossier.</div>
+            </div>
+          </div>
+          <div class="mit-card">
+            <div class="mit-card-header">
+              <div class="mit-icon blue"><svg viewBox="0 0 24 24" stroke="#60a5fa"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+              <div class="mit-card-title">Eradication</div>
+            </div>
+            <div class="mit-list">
+              <div class="mit-item"><span class="mit-num">01</span>Forensic imaging of all affected SCADA controllers. Restore firmware from verified clean backups only.</div>
+              <div class="mit-item"><span class="mit-num">02</span>Full threat hunt across OT environment for dormant implants. Scan for T1190 and T1078 artifacts.</div>
+            </div>
+          </div>
+          <div class="mit-card">
+            <div class="mit-card-header">
+              <div class="mit-icon green"><svg viewBox="0 0 24 24" stroke="#10b981"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+              <div class="mit-card-title">Long-Term Hardening</div>
+            </div>
+            <div class="mit-list">
+              <div class="mit-item"><span class="mit-num">01</span>Implement IEC 62443 compliant IT/OT segmentation architecture with unidirectional data diodes at all boundaries.</div>
+              <div class="mit-item"><span class="mit-num">02</span>Deploy OT-specific SIEM with anomaly detection tuned to SCADA protocol baselines. Quarterly red team exercises.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+
+// ── TACTIC PILL CLICK (will be re-attached after API response) ────────────
+function attachTacticPills(techniques) {
+  document.querySelectorAll('.tactic-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.tactic-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const tac = pill.dataset.tactic.toLowerCase();
+      const matched = techniques.filter(t =>
+        t.tactic && t.tactic.toLowerCase().replace(/\s+/g,'-').includes(tac)
+      );
+      const grid = document.getElementById('tech-grid');
+      grid.innerHTML = matched.length
+        ? matched.map(t => `<div class="tech-card"><div class="tech-id">${t.id}</div><div class="tech-name">${t.name}</div></div>`).join('')
+        : `<div style="color:var(--text-muted);font-family:var(--font-display);font-size:12px;letter-spacing:.1em;">No techniques mapped for this tactic.</div>`;
+      document.getElementById('techniques-panel').classList.add('visible');
+    });
+  });
+}
+
+// ── POPULATE OUTPUT FROM API RESPONSE ────────────────────────────────────
+function populateOutput(data) {
+  // Overview
+  document.querySelector('#s1 .overview-cell:nth-child(1) .value').textContent = data.severity || '—';
+  document.querySelector('#s1 .overview-cell:nth-child(2) .value').textContent = data.confidence || '—';
+  document.querySelector('#s1 .overview-cell:nth-child(3) .value').textContent = data.sector || '—';
+  document.querySelector('#s1 .overview-cell:nth-child(4) .value').textContent = data.threat_actor || '—';
+  document.querySelector('#s1 .sum-title').textContent = data.title || '';
+  document.querySelector('#s1 p').textContent = data.executive_summary || '';
+
+  // Timeline
+  const tlContainer = document.querySelector('.timeline');
+  tlContainer.innerHTML = (data.timeline || []).map((step, i) => `
+    <div class="tl-item">
+      <div class="tl-spine">
+        <div class="tl-marker"></div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-content">
+        <div class="tl-step">Step ${String(i+1).padStart(2,'0')} · ${step.title}</div>
+        <div class="tl-title">${step.title}</div>
+        <div class="tl-text">${step.text}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // MITRE techniques
+  const techniques = data.techniques || [];
+  const grid = document.getElementById('tech-grid');
+  grid.innerHTML = techniques.map(t =>
+    `<div class="tech-card"><div class="tech-id">${t.id}</div><div class="tech-name">${t.name}</div></div>`
+  ).join('');
+  document.getElementById('techniques-panel').classList.add('visible');
+  attachTacticPills(techniques);
+
+  // IOCs
+  const iocGroups = document.querySelectorAll('.ioc-group');
+  const networkIOCs = (data.iocs || []).filter(i => i.type === 'ip' || i.type === 'domain');
+  const fileIOCs = (data.iocs || []).filter(i => i.type === 'hash' || i.type === 'cve');
+
+  iocGroups[0].innerHTML = `<div class="ioc-group-title">Network Indicators</div>` +
+    (networkIOCs.length ? networkIOCs.map(ioc => `
+      <div class="ioc-item">
+        <span class="ioc-tag ${ioc.type}">${ioc.type.toUpperCase()}</span>
+        <span class="ioc-val">${ioc.value}</span>
+        <span class="ioc-conf" style="color:${ioc.confidence==='high'?'var(--red)':'var(--yellow)'};">${ioc.confidence}</span>
+      </div>`).join('')
+    : '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">No network IOCs identified.</div>');
+
+  iocGroups[1].innerHTML = `<div class="ioc-group-title">File & Vulnerability Indicators</div>` +
+    (fileIOCs.length ? fileIOCs.map(ioc => `
+      <div class="ioc-item">
+        <span class="ioc-tag ${ioc.type}">${ioc.type.toUpperCase()}</span>
+        <span class="ioc-val">${ioc.value}</span>
+        <span class="ioc-conf" style="color:${ioc.confidence==='high'?'var(--red)':'var(--yellow)'};">${ioc.confidence}</span>
+      </div>`).join('')
+    : '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">No file IOCs identified.</div>');
+
+  // Mitigations
+  const mitGrid = document.querySelector('.mit-grid');
+  const iconMap = {
+    red: `<svg viewBox="0 0 24 24" stroke="#ef4444"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>`,
+    amber: `<svg viewBox="0 0 24 24" stroke="#f59e0b"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`,
+    blue: `<svg viewBox="0 0 24 24" stroke="#60a5fa"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>`,
+    green: `<svg viewBox="0 0 24 24" stroke="#10b981"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+  };
+  const colors = ['red','amber','blue','green'];
+  mitGrid.innerHTML = (data.mitigations || []).map((m, i) => `
+    <div class="mit-card">
+      <div class="mit-card-header">
+        <div class="mit-icon ${colors[i % colors.length]}">${iconMap[colors[i % colors.length]]}</div>
+        <div class="mit-card-title">${m.phase}</div>
+      </div>
+      <div class="mit-list">
+        ${(m.items || []).map((item, j) => `
+          <div class="mit-item"><span class="mit-num">${String(j+1).padStart(2,'0')}</span>${item}</div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  // Hide static graph section
+  document.getElementById('s5').style.display = 'none';
+}
+
+// ── SCROLLYTELLING ────────────────────────────────────────────────────────
+const scrollObserver = new IntersectionObserver((entries, observer) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('revealed');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { rootMargin: '0px 0px -100px 0px', threshold: 0.1 });
+
+// ── ANALYZE BUTTON ────────────────────────────────────────────────────────
+document.getElementById('analyze-btn').addEventListener('click', async () => {
+  const val = document.getElementById('incident-input').value.trim();
+  if (!val) return;
+
+  const inputSection = document.getElementById('input-section');
+  const analyzing = document.getElementById('analyzing-state');
+  const output = document.getElementById('output-section');
+
+  inputSection.style.minHeight = 'auto';
+  inputSection.style.paddingBottom = '40px';
+  analyzing.classList.add('visible');
+  output.classList.remove('visible');
+
+  try {
+    const res = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ incident_text: val })
+    });
+    const data = await res.json();
+
+    analyzing.classList.remove('visible');
+    populateOutput(data);
+    output.classList.add('visible');
+
+    document.querySelectorAll('.section, .tl-item, .mit-card').forEach(el => {
+      scrollObserver.observe(el);
+    });
+    document.getElementById('s1').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch(e) {
+    console.error('Analyze failed:', e);
+    analyzing.classList.remove('visible');
+  }
+});
+
+// ── BG ────────────────────────────────────────────────────────────────────
+(function bg(){
+  const canvas = document.getElementById('bg-canvas');
+  const W = window.innerWidth, H = window.innerHeight;
+  canvas.width = W; canvas.height = H;
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:false, alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setSize(W,H); renderer.setClearColor(0,0);
+  const scene = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(60,W/H,0.1,2000);
+  cam.position.z = 1;
+  const geo = new THREE.BufferGeometry();
+  const n = 1800, pos = new Float32Array(n*3);
+  for(let i=0;i<n;i++){
+    const t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),r=70+Math.random()*50;
+    pos[i*3]=r*Math.sin(p)*Math.cos(t);pos[i*3+1]=r*Math.cos(p);pos[i*3+2]=r*Math.sin(p)*Math.sin(t);
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const stars=new THREE.Points(geo,new THREE.PointsMaterial({color:0x8ba3c7,size:.11,sizeAttenuation:true}));
+  scene.add(stars);
+  (function loop(){requestAnimationFrame(loop);stars.rotation.y+=.000035;renderer.render(scene,cam);})();
+})();
+
+
+
+(function autoAnalyze() {
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get('q');
+  if (!q) return;
+  const decoded = decodeURIComponent(q);
+  const input = document.getElementById('incident-input');
+  input.value = decoded;
+  // Manually trigger the full analyze flow instead of .click()
+  setTimeout(async () => {
+    const inputSection = document.getElementById('input-section');
+    const analyzing = document.getElementById('analyzing-state');
+    const output = document.getElementById('output-section');
+    inputSection.style.minHeight = 'auto';
+    inputSection.style.paddingBottom = '40px';
+    analyzing.classList.add('visible');
+    output.classList.remove('visible');
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ incident_text: decoded })
+      });
+      const data = await res.json();
+      analyzing.classList.remove('visible');
+      populateOutput(data);
+      output.classList.add('visible');
+      document.querySelectorAll('.section, .tl-item, .mit-card').forEach(el => {
+        scrollObserver.observe(el);
+      });
+      document.getElementById('s1').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch(e) {
+      console.error('Auto-analyze failed:', e);
+      analyzing.classList.remove('visible');
+    }
+  }, 300);
+})();
+
+</script>
+</body>
+</html>

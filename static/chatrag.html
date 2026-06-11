@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'%3E%3Crect width='32' height='32' rx='4' fill='%23051424'/%3E%3Cpath d='M16 6C13 11 11 16 11 16C11 16 13 21 16 26C19 21 21 16 21 16C21 16 19 11 16 6Z' stroke='%233b82f6' stroke-width='2' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%233b82f6'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Stardos+Stencil:wght@400;700&family=PT+Serif+Caption&display=swap" rel="stylesheet"/>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --void:#030712;--deep:#060d1f;--navy:#0a1628;
+  --accent:#3b82f6;--accent-bright:#60a5fa;
+  --text-primary:#f0f6ff;--text-secondary:#8ba3c7;--text-muted:#3d5a80;
+  --green:#10b981;--yellow:#f59e0b;--red:#ef4444;
+  --glass:rgba(10,22,40,0.65);--border:rgba(59,130,246,0.16);
+  --font-display:'Stardos Stencil',monospace;--font-body:'PT Serif Caption',serif;
+
+}
+html{scroll-behavior:smooth;}
+body{background:var(--void);color:var(--text-primary);font-family:var(--font-body);overflow:hidden;height:100vh;}
+
+/* BG */
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
+#bg canvas{width:100%;height:100%;}
+.vignette{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,rgba(3,7,18,.8) 100%);}
+
+/* NAV */
+nav{position:relative;z-index:100;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;background:rgba(3,7,18,.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);}
+.nav-brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:.06em;}
+.nav-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 2.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.nav-links{display:flex;gap:32px;font-family:var(--font-display);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);}
+.nav-links a{color:inherit;text-decoration:none;transition:color .2s;}
+.nav-links a.active{color:var(--accent-bright);}
+.nav-links a:hover{color:var(--text-secondary);}
+
+/* CHAT LAYOUT */
+main{position:relative;z-index:10;height:calc(100vh - 60px);display:flex;flex-direction:column;align-items:center;}
+.chat-container{width:100%;max-width:960px;flex:1;display:flex;flex-direction:column;padding:32px 48px;overflow:hidden;}
+
+/* CHAT HISTORY */
+.chat-history{flex:1;overflow-y:scroll;display:flex;flex-direction:column;gap:32px;padding-right:8px;padding-bottom:40px;scroll-behavior:smooth;min-height:0;margin-right:-8px;}
+.chat-history::-webkit-scrollbar{width:6px;}
+.chat-history::-webkit-scrollbar-track{background:rgba(10,22,40,0.4);border-radius:4px;}
+.chat-history::-webkit-scrollbar-thumb{background:rgba(59,130,246,0.4);border-radius:4px;}
+.chat-history::-webkit-scrollbar-thumb:hover{background:rgba(59,130,246,0.7);}
+
+/* MESSAGES */
+.msg-wrapper{display:flex;flex-direction:column;max-width:85%;animation:fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+.msg-wrapper.user{align-self:flex-end;align-items:flex-end;}
+.msg-wrapper.ai{align-self:flex-start;}
+
+.msg-header{font-family:var(--font-display);font-size:11px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.msg-wrapper.user .msg-header{color:var(--text-muted);}
+.msg-wrapper.ai .msg-header{color:var(--accent-bright);}
+
+.msg-bubble{padding:20px 24px;border-radius:16px;font-size:16px;line-height:1.7;font-weight:300;}
+.msg-wrapper.user .msg-bubble{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);color:var(--text-primary);border-bottom-right-radius:4px;}
+.msg-wrapper.ai .msg-bubble{background:var(--glass);border:1px solid var(--border);backdrop-filter:blur(16px);color:var(--text-secondary);border-bottom-left-radius:4px;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
+
+/* RAG SOURCES (AI ONLY) */
+.rag-sources{margin-top:20px;padding-top:16px;border-top:1px solid rgba(59,130,246,.15);}
+.rag-label{font-family:var(--font-display);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.rag-label svg{width:12px;height:12px;stroke:var(--text-muted);}
+.rag-pill-container{display:flex;flex-wrap:wrap;gap:8px;}
+.rag-pill{font-family:var(--font-display);font-size:10px;letter-spacing:.05em;padding:6px 12px;border-radius:4px;background:rgba(10,22,40,.8);border:1px solid rgba(59,130,246,.2);color:var(--accent-bright);display:flex;align-items:center;gap:8px;cursor:pointer;transition:all 0.2s;}
+.rag-pill:hover{background:rgba(59,130,246,.15);border-color:var(--accent);transform:translateY(-1px);}
+.rag-pill.pdf{border-color:rgba(239,68,68,.3);color:var(--red);}
+.rag-pill.json{border-color:rgba(245,158,11,.3);color:var(--yellow);}
+.rag-pill.db{border-color:rgba(16,185,129,.3);color:var(--green);}
+
+/* INPUT ZONE */
+.chat-input-zone{width:100%;padding:20px 0 32px;position:relative;}
+.input-shell{background:var(--glass);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(20px);padding:8px 8px 8px 24px;display:flex;align-items:flex-end;gap:16px;transition:border-color .3s,box-shadow .3s;}
+.input-shell:focus-within{border-color:rgba(59,130,246,.45);box-shadow:0 0 40px rgba(59,130,246,.1);}
+
+.input-shell textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text-primary);font-family:var(--font-body);font-size:17px;font-weight:300;line-height:1.6;resize:none;min-height:50px;max-height:150px;padding:12px 0;caret-color:var(--accent-bright);}
+.input-shell textarea::placeholder{color:var(--text-muted);}
+
+.input-actions{display:flex;align-items:center;gap:12px;padding-bottom:6px;}
+.btn-attach{background:transparent;border:1px solid transparent;color:var(--text-muted);width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;}
+.btn-attach:hover{background:rgba(59,130,246,.1);color:var(--accent-bright);border-color:rgba(59,130,246,.2);}
+.btn-send{background:var(--accent);color:#fff;border:none;border-radius:10px;height:44px;padding:0 24px;font-family:var(--font-display);font-size:12px;letter-spacing:.15em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all .25s;display:flex;align-items:center;gap:8px;}
+.btn-send:hover{background:var(--accent-bright);transform:translateY(-1px);box-shadow:0 8px 24px rgba(59,130,246,.3);}
+
+/* TYPING INDICATOR */
+.typing-indicator{display:none;align-self:flex-start;background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:16px 24px;border-bottom-left-radius:4px;align-items:center;gap:12px;backdrop-filter:blur(16px);margin-bottom:20px;}
+.typing-indicator.visible{display:flex;}
+.scan-ring-small{width:16px;height:16px;border-radius:50%;border:2px solid rgba(59,130,246,.2);border-top-color:var(--accent);animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.typing-text{font-family:var(--font-display);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);}
+
+</style>
+</head>
+<body>
+
+<div id="bg"><canvas id="bg-canvas"></canvas></div>
+<div class="vignette"></div>
+
+<nav>
+  <div class="nav-brand">
+  <img src="/static/oculus-logo.svg" alt="OCULUS logo - cybersecurity threat intelligence platform header" style="height:44px;width:auto;">
+</div>
+
+<div class="nav-links">
+    <a href="/static/globe.html">Threat Map</a>
+<a href="/static/updates.html">News Intel</a>
+    <a href="/static/mittar.html">Analyzer</a>
+    <a href="/static/chatrag.html" class="active">Assistant</a>
+  </div>
+</nav>
+
+<main>
+  <div class="chat-container">
+    
+    <div class="chat-history" id="chat-history">
+      <!-- Initial AI Greeting -->
+      <div class="msg-wrapper ai">
+        <div class="msg-header">
+          <div style="display:flex; align-items:center;">
+            <svg width="11" height="13" viewBox="0 0 12 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 1px; margin-bottom: 1px;">
+              <path d="M6 1C10 4.5 10 9.5 6 13C2 9.5 2 4.5 6 1Z"/>
+              <circle cx="6" cy="7" r="1.2" fill="currentColor"/>
+            </svg>culus
+          </div>
+        </div>
+        <div class="msg-bubble">
+          OCULUS online. Connected to threat intelligence feeds, MITRE ATT&CK knowledge, and incident analysis systems. Describe a threat, incident, or suspicious activity to begin your investigation. 🪬
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="typing-indicator" id="typing-indicator">
+      <div class="scan-ring-small"></div>
+      <div class="typing-text">Querying Knowledge Base...</div>
+    </div>
+
+    <div class="chat-input-zone">
+      <div class="input-shell">
+        <textarea id="chat-input" placeholder="Ask about an APT group, search IOCs, or paste a log snippet..." rows="1"></textarea>
+        <div class="input-actions">
+          <button class="btn-attach" title="Attach Document">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <button class="btn-send" id="btn-send">
+            Send
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Auto-resize textarea
+const tx = document.getElementById('chat-input');
+tx.addEventListener("input", function() {
+  this.style.height = 'auto';
+  this.style.height = (this.scrollHeight) + "px";
+});
+
+const chatHistory = document.getElementById('chat-history');
+const typingIndicator = document.getElementById('typing-indicator');
+const btnSend = document.getElementById('btn-send');
+
+function scrollToBottom() {
+  chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+function addUserMessage(text) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'msg-wrapper user';
+  wrapper.innerHTML = `
+    <div class="msg-header">Analyst // You</div>
+    <div class="msg-bubble">${text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\n/g, '<br>')}</div>
+  `;
+  chatHistory.appendChild(wrapper);
+  scrollToBottom();
+}
+
+function addAIMessage(text, sources) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'msg-wrapper ai';
+  
+  let sourcesHTML = '';
+  if (sources && sources.length > 0) {
+    const pills = sources.map(s => {
+      let icon = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>';
+      if(s.type === 'pdf') return `<div class="rag-pill pdf">${icon} ${s.name}</div>`;
+      if(s.type === 'json') return `<div class="rag-pill json">${icon} ${s.name}</div>`;
+      if(s.type === 'db') return `<div class="rag-pill db"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg> ${s.name}</div>`;
+      return `<div class="rag-pill">${icon} ${s.name}</div>`;
+    }).join('');
+    
+    sourcesHTML = `
+      <div class="rag-sources">
+        <div class="rag-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Knowledge Sources Extracted
+        </div>
+        <div class="rag-pill-container">${pills}</div>
+      </div>
+    `;
+  }
+
+  wrapper.innerHTML = `
+    <div class="msg-header">
+      <div style="display:flex; align-items:center;">
+        <svg width="11" height="13" viewBox="0 0 12 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 1px; margin-bottom: 1px;">
+          <path d="M6 1C10 4.5 10 9.5 6 13C2 9.5 2 4.5 6 1Z"/>
+          <circle cx="6" cy="7" r="1.2" fill="currentColor"/>
+        </svg>culus
+      </div>
+    </div>
+    <div class="msg-bubble">
+      ${text.replace(/\n/g, '<br>')}
+      ${sourcesHTML}
+    </div>
+  `;
+  
+  // Insert before the typing indicator
+  chatHistory.insertBefore(wrapper, typingIndicator);
+  scrollToBottom();
+}
+
+const conversationHistory = [];
+
+async function handleSend() {
+  const val = tx.value.trim();
+  if (!val) return;
+
+  addUserMessage(val);
+  tx.value = '';
+  tx.style.height = 'auto';
+
+  chatHistory.appendChild(typingIndicator);
+  typingIndicator.classList.add('visible');
+  scrollToBottom();
+
+  conversationHistory.push({ role: 'user', content: val });
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: val, history: conversationHistory.slice(-6) })
+    });
+    const data = await res.json();
+
+    conversationHistory.push({ role: 'assistant', content: data.response });
+
+    typingIndicator.classList.remove('visible');
+
+    const sources = (data.sources || []).map(s => ({
+      name: s.ref || 'MITRE KB',
+      type: s.type || 'db'
+    }));
+
+    addAIMessage(data.response, sources);
+
+  } catch(e) {
+    console.error('Chat failed:', e);
+    typingIndicator.classList.remove('visible');
+    addAIMessage('Knowledge base query failed. Check backend connection.', []);
+  }
+}
+
+btnSend.addEventListener('click', handleSend);
+tx.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    handleSend();
+  }
+});
+
+// 3D Background (Same as original)
+(function bg(){
+  const canvas=document.getElementById('bg-canvas');
+  const W=window.innerWidth,H=window.innerHeight;
+  canvas.width=W;canvas.height=H;
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setSize(W,H);renderer.setClearColor(0,0);
+  const scene=new THREE.Scene();
+  const cam=new THREE.PerspectiveCamera(60,W/H,0.1,2000);
+  cam.position.z=1;
+  const geo=new THREE.BufferGeometry();
+  const n=1800,pos=new Float32Array(n*3);
+  for(let i=0;i<n;i++){
+    const t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),r=70+Math.random()*50;
+    pos[i*3]=r*Math.sin(p)*Math.cos(t);pos[i*3+1]=r*Math.cos(p);pos[i*3+2]=r*Math.sin(p)*Math.sin(t);
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const stars=new THREE.Points(geo,new THREE.PointsMaterial({color:0x8ba3c7,size:.11,sizeAttenuation:true}));
+  scene.add(stars);
+  (function loop(){requestAnimationFrame(loop);stars.rotation.y+=.000035;renderer.render(scene,cam);})();
+})();
+
+(function autoChat() {
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get('q');
+  if (!q) return;
+  tx.value = decodeURIComponent(q);
+  setTimeout(() => handleSend(), 800);
+})();
+
+</script>
+</body>
+</html>
