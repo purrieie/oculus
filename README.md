@@ -24,7 +24,7 @@ Interactive 3D globe displaying live cyber incidents and exploited vulnerabiliti
 * Sector classification
 
 <img width="1674" height="936" alt="Screenshot 2026-06-12 at 11 35 14 AM" src="https://github.com/user-attachments/assets/d2652b8d-d7ea-43a6-93f8-e0ecf1ee2dc2" />
-
+  
 ---
 
 ### 📰 Threat Intelligence Updates
@@ -79,6 +79,21 @@ A RAG-powered cybersecurity assistant.
 
 <img width="1051" height="463" alt="Screenshot 2026-06-12 at 11 33 43 AM" src="https://github.com/user-attachments/assets/abc6b98c-bb9a-429b-9944-994a6a673b97" />
 
+## 🔄 How It Works
+
+1. Threat intelligence is collected from external sources including CISA advisories, KEV feeds, MITRE ATT&CK, and cybersecurity news sources.
+
+2. FastAPI processes and normalizes incoming intelligence.
+
+3. MITRE ATT&CK techniques are indexed into ChromaDB using Sentence Transformers embeddings.
+
+4. User queries and incident reports are enriched through retrieval-augmented generation (RAG).
+
+5. Groq-hosted LLMs generate summaries, incident analysis, MITRE mappings, and analyst responses.
+
+6. Results are visualized through the OCULUS frontend.
+
+---
 
 ## 🧠 Technology Stack
 
@@ -238,7 +253,6 @@ Create a `.env` file:
 ```env
 GROQ_API_KEY=
 NEWS_API_KEY=
-OTX_API_KEY=
 ```
 
 Start the server:
@@ -261,23 +275,6 @@ http://localhost:8000/docs
 
 ---
 
-## 📸 Screenshots
-
-### 🌍 Threat Map
-
----
-
-### 📰 Intelligence Updates
-
----
-
-### 🎯 MITRE Analyzer
-
----
-
-### 🤖 OCULUS Analyst
-
----
 
 ## 🚀 Future Enhancements
 
