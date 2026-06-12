@@ -67,30 +67,45 @@ A RAG-powered cybersecurity assistant.
 
 ## 🏗️ System Architecture
 
-flowchart TD
+flowchart LR
 
-    UI["Frontend UI"] --> API["FastAPI Backend"]
+    subgraph Frontend
+        A[Threat Map]
+        B[Intel Updates]
+        C[MITRE Analyzer]
+        D[OCULUS Analyst]
+    end
 
-    API --> INC["GET api/incidents"]
-    API --> NEWS["GET api/news"]
-    API --> ANALYZE["POST api/analyze"]
-    API --> CHAT["POST api/chat"]
+    subgraph Backend
+        E[FastAPI]
+    end
 
-    INC --> CISA1["CISA KEV Feed"]
-    INC --> CISA2["CISA ICS Advisories"]
+    subgraph Intelligence
+        F[CISA KEV]
+        G[CISA Advisories]
+        H[NewsAPI]
+        I[MITRE ATT&CK]
+    end
 
-    NEWS --> NEWSAPI["NewsAPI"]
-    NEWS --> SUMM["Groq Summaries"]
+    subgraph AI
+        J[Groq]
+        K[ChromaDB]
+        L[Embeddings]
+    end
 
-    ANALYZE --> MITRE["MITRE ATT&CK Dataset"]
-    ANALYZE --> G1["Groq Analysis"]
+    A --> E
+    B --> E
+    C --> E
+    D --> E
 
-    CHAT --> CHROMA["ChromaDB"]
-    CHROMA --> KB["MITRE Knowledge Base"]
+    E --> F
+    E --> G
+    E --> H
+    E --> I
 
-    CHAT --> EMB["Sentence Transformers"]
-    CHAT --> G2["Groq LLM"]
----
+    E --> J
+    E --> K
+    E --> L
 
 ## 🧠 Technology Stack
 
