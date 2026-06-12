@@ -23,7 +23,7 @@ Interactive 3D globe displaying live cyber incidents and exploited vulnerabiliti
 * Critical infrastructure focus
 * Sector classification
 
-  <img width="1708" height="935" alt="Screenshot 2026-06-12 at 11 36 19 AM" src="https://github.com/user-attachments/assets/bf04c1cc-0e5a-4185-8b56-5650e675c1b6" />
+<img width="1674" height="936" alt="Screenshot 2026-06-12 at 11 35 14 AM" src="https://github.com/user-attachments/assets/d2652b8d-d7ea-43a6-93f8-e0ecf1ee2dc2" />
 
 ---
 
