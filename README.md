@@ -35,7 +35,6 @@ Continuously updated cybersecurity intelligence feed.
 * AI-generated summaries
 * Threat categorization
 * Source attribution
-* Sector-specific filtering
 
 <img width="1710" height="929" alt="Screenshot 2026-06-12 at 11 37 55 AM" src="https://github.com/user-attachments/assets/5e59690d-051a-40e5-916e-4560524653b0" />
 
