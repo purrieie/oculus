@@ -1,4 +1,4 @@
-# 👁️ OCULUS
+# OCULUS
 
 ### *The world's cyber threats, visualized in real time.*
 
