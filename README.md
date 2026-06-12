@@ -59,8 +59,6 @@ Output:
 * Recommended mitigations
 
 <img width="1706" height="938" alt="Screenshot 2026-06-12 at 11 39 36 AM" src="https://github.com/user-attachments/assets/b3474781-b0e0-4211-83aa-44e46d018bda" />
-<img width="1710" height="937" alt="Screenshot 2026-06-12 at 11 40 31 AM" src="https://github.com/user-attachments/assets/898d3481-779f-495c-885a-3a0f313bc60c" />
-
 
 ---
 
