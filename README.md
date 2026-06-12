@@ -6,6 +6,9 @@ OCULUS is an AI-powered cyber intelligence platform built to monitor, analyze, a
 
 From real-time vulnerability intelligence to MITRE ATT&CK analysis and retrieval-augmented cyber investigations, OCULUS combines threat feeds, AI reasoning, and interactive visualization into a single operational workspace.
 
+<img width="1708" height="935" alt="Screenshot 2026-06-12 at 11 36 19 AM" src="https://github.com/user-attachments/assets/f99ebe9d-c4d3-4350-b65a-def5512102ea" />
+
+
 ---
 
 ## ✨ Features
@@ -20,6 +23,8 @@ Interactive 3D globe displaying live cyber incidents and exploited vulnerabiliti
 * Critical infrastructure focus
 * Sector classification
 
+  <img width="1708" height="935" alt="Screenshot 2026-06-12 at 11 36 19 AM" src="https://github.com/user-attachments/assets/bf04c1cc-0e5a-4185-8b56-5650e675c1b6" />
+
 ---
 
 ### 📰 Threat Intelligence Updates
@@ -31,6 +36,8 @@ Continuously updated cybersecurity intelligence feed.
 * Threat categorization
 * Source attribution
 * Sector-specific filtering
+
+<img width="1710" height="929" alt="Screenshot 2026-06-12 at 11 37 55 AM" src="https://github.com/user-attachments/assets/5e59690d-051a-40e5-916e-4560524653b0" />
 
 ---
 
@@ -51,6 +58,10 @@ Output:
 * IOC extraction
 * Recommended mitigations
 
+<img width="1706" height="938" alt="Screenshot 2026-06-12 at 11 39 36 AM" src="https://github.com/user-attachments/assets/b3474781-b0e0-4211-83aa-44e46d018bda" />
+<img width="1710" height="937" alt="Screenshot 2026-06-12 at 11 40 31 AM" src="https://github.com/user-attachments/assets/898d3481-779f-495c-885a-3a0f313bc60c" />
+
+
 ---
 
 ### 🤖 OCULUS Analyst
@@ -63,49 +74,14 @@ A RAG-powered cybersecurity assistant.
 * Source attribution
 * Critical infrastructure expertise
 
+<img width="1710" height="937" alt="Screenshot 2026-06-12 at 11 40 31 AM" src="https://github.com/user-attachments/assets/e40028ab-d8c0-47bd-9bb3-09c6ce89e18b" />
+
 ---
 
 ## 🏗️ System Architecture
 
-flowchart LR
+<img width="1051" height="463" alt="Screenshot 2026-06-12 at 11 33 43 AM" src="https://github.com/user-attachments/assets/abc6b98c-bb9a-429b-9944-994a6a673b97" />
 
-    subgraph Frontend
-        A[Threat Map]
-        B[Intel Updates]
-        C[MITRE Analyzer]
-        D[OCULUS Analyst]
-    end
-
-    subgraph Backend
-        E[FastAPI]
-    end
-
-    subgraph Intelligence
-        F[CISA KEV]
-        G[CISA Advisories]
-        H[NewsAPI]
-        I[MITRE ATT&CK]
-    end
-
-    subgraph AI
-        J[Groq]
-        K[ChromaDB]
-        L[Embeddings]
-    end
-
-    A --> E
-    B --> E
-    C --> E
-    D --> E
-
-    E --> F
-    E --> G
-    E --> H
-    E --> I
-
-    E --> J
-    E --> K
-    E --> L
 
 ## 🧠 Technology Stack
 
